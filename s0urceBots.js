@@ -1,4 +1,5 @@
 const socket = require('socket.io-client')
+// TODO Интегрировать модуль Solver сюда и реализовать методы для взаимодействия с ним
 
 module.exports = {
     bot: class {
@@ -12,9 +13,12 @@ module.exports = {
                 first: undefined,
                 second: undefined
             }
-            this.name = name // Даем имя боту, которое будет отображаться в игре
+            this.name = name
             this.isOnline = false
+            // TODO Реализовать просмотр баланса
         }
+
+            // Общее
 
         // Закрытие игровой сессии
         die() {
@@ -202,6 +206,86 @@ module.exports = {
                 tasks.unique.forEach(task => {
                     if (task.task != 2009) return
                     callback()
+                })
+            })
+        }
+
+            // Разгадывание и обработка слов
+
+        // Инициация взлома
+        startHacking(id, port = 0, callback = () => {}) {
+            if (!this.isOnline) return
+            this.socket.emit('playerRequest', {
+                task: 100,
+                id: id,
+                port: port
+            })
+
+            this.socket.once('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    if (task.task != 2002) return
+                    callback()
+                })
+            })
+        }
+        
+        // Событие, происходящие при получении нового слова на разгадывание
+        onWordResolveRequest(handler) {
+            this.socket.on('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    if (task.task != 333 || task.opt != 1) return
+                    handler(task.url.t, task.url.i) 
+                })
+            })
+        }
+
+        // Отправка разгаданного слова
+        sendWord(word) {
+            this.socket.emit('playerRequest', {
+                task: 777,
+                word: word
+            })
+        }
+
+        // Событие успешного разгадывания
+        onWordSuccess(hander) {
+            this.socket.on('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    if (task.task != 333 || task.opt != 2) return
+                    hander()
+                })
+            })
+        }
+
+        // Событие неудачного разгададывания
+        onWordFail(handler) {
+            this.socket.on('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    if (task.task != 333 || task.opt != 0) return
+                    handler()
+                })
+            })
+        }
+
+        // Событие успешного взлома
+        onHackingSuccess(handler) {
+            this.socket.on('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    if (task.task != 2003) return
+                    if (task.text.slice(0, 22) != '<br>Hacking successful') return
+                    handler()
+                })
+            })
+        }
+
+        // Событие неудачного взлома
+        onHackingFail(handler) {
+            this.socket.on('mainPackage', (tasks) => {
+                tasks.unique.forEach(task => {
+                    // TODO Реализовать передачу типы возникнувшей ошибки
+                    if (task.task != 2003) return
+                    if (task.text.slice(0, 22) == '<br>Hacking successful') return
+                    handler(task.text)
                 })
             })
         }
