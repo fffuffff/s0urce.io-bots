@@ -210,6 +210,13 @@ module.exports = {
             })
         }
 
+        sendAfterHackingMsg(msg) {
+            this.socket.emit('playerRequest', {
+                task: 106,
+                text: msg
+            })
+        }
+
             // Разгадывание и обработка слов
 
         // Инициация взлома
