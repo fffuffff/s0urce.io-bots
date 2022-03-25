@@ -289,7 +289,7 @@ module.exports = {
         onHackingFail(handler) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
-                    // TODO Реализовать передачу типы возникнувшей ошибки
+                    // TODO Implement passing the type of the error that occurred
                     if (task.task != 2003) return
                     if (task.text.slice(0, 22) == '<br>Hacking successful') return
                     handler(task.text)
