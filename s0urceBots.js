@@ -1,5 +1,5 @@
 const socket = require('socket.io-client')
-// TODO Интегрировать модуль Solver сюда и реализовать методы для взаимодействия с ним
+// TODO Integrate the Solver module here and implement methods to interact with it
 
 module.exports = {
     bot: class {
@@ -15,18 +15,18 @@ module.exports = {
             }
             this.name = name
             this.isOnline = false
-            // TODO Реализовать просмотр баланса
+            // TODO Implement balance view
         }
 
-            // Общее
+            // General
 
-        // Закрытие игровой сессии
+        // Closing the game session
         die() {
             this.socket.disconnect()
             this.isOnline = false
         }
 
-        // Метод для получения свойств класса
+        // Method for getting class properties
         async getProperties() {
             return new Promise((resolve, reject) => {
                 this.socket.once('mainPackage', (tasks) => {
@@ -41,20 +41,20 @@ module.exports = {
             })
         }
 
-        // Метод вводящий бота в игру. В качестве параметра передается функция обработчик
-        // которая будет выполнена когда бот зайдет в игру
+        // The method that brings the bot into the game. The handler function is passed as a parameter.
+        // which will be executed when the bot enters the game
         login(handler) {
             this.socket = socket('http://s0urce.io/')
 
-            // При успешном подключении, отправляем запрос на вход
+            // Upon successful connection, we send a login request
             this.socket.once('connect', () => {            
                 this.socket.emit('signIn', {
                     name: this.name
                 })
             })
 
-            // При получении ответа об удачном входе, запоминеам ид, начинаем запоминать текущие данные
-            // и выполняем пользовательский обработчик
+            // Upon receiving a response about a successful entry, remembering the id, we begin to remember the current data
+            // and execute custom handler
             this.socket.once('prepareClient', (data) => {
                 this.id = data.id
                 this.socket.on('mainPackage', (tasks) => {
@@ -80,16 +80,16 @@ module.exports = {
             })
         }
 
-        // Метод получающий информацию об игроке
+        // Method receiving information about the player
         getTargetInfo(id, handler) {
             if (this.isOnline) {
-                // Пытаемся узнать информацию о игроке по ид
+                // We are trying to find out information about the player by id
                 this.socket.emit('playerRequest', {
                     task: 105,
                     id: id
                 })
 
-                // При получении ответа вызываем обработчик
+                // When a response is received, call the handler
                 this.socket.once('mainPackage', (response) => {
                     response.unique.forEach(item => {
                         switch (item.task) {
@@ -113,17 +113,17 @@ module.exports = {
             }
         }
 
-        // Метод для проверки находитс ли игрок в сети
+        // Method for checking if a player is online
         async isTargetOnline(id) {
             return new Promise((resolve, reject) => {
                 if (this.isOnline) {
-                    // Пытаемся узнать информацию о игроке по ид
+                    // We are trying to find out information about the player by id
                     this.socket.emit('playerRequest', {
                         task: 105,
                         id: id
                     })
     
-                    // При получении ответа обрабатываем его
+                    // When we receive a response, we process it
                     this.socket.once('mainPackage', (response) => {
                         response.unique.forEach(item => {
                             switch (item.task) {
@@ -147,7 +147,7 @@ module.exports = {
             })
         }
 
-        // Метод для отправли сообщений другим игрокам
+        // Method for sending messages to other players
         sendMessage(id, msg, onError = () => {}) {
             this.isTargetOnline(id)
             .then(
@@ -165,7 +165,7 @@ module.exports = {
             )
         }
 
-        // Метод для получения текущего списка игроков
+        // Method for getting the current list of players
         async getTargetList() {
             return new Promise((resolve) => {
                 if (this.isOnline) {
@@ -183,7 +183,7 @@ module.exports = {
             })
         }
 
-        // Событие, происходящее при написании сообщения боту другим игроком
+        // Event that occurs when another player writes a message to the bot
         onMessage(handler) {
             this.socket.on('mainPackage', (response) => {
                 response.unique.forEach(item => {
@@ -194,7 +194,7 @@ module.exports = {
             })
         }
 
-        // Смена описания в игре
+        // Change the description in the game
         changeDesc(desc, callback = () => {}) {
             if (!this.isOnline) return
             this.socket.emit('playerRequest', {
@@ -217,9 +217,9 @@ module.exports = {
             })
         }
 
-            // Разгадывание и обработка слов
+            // Unraveling and word processing
 
-        // Инициация взлома
+        // Hack initiation
         startHacking(id, port = 0, callback = () => {}) {
             if (!this.isOnline) return
             this.socket.emit('playerRequest', {
@@ -236,7 +236,7 @@ module.exports = {
             })
         }
         
-        // Событие, происходящие при получении нового слова на разгадывание
+        // Events that occur when a new word is received for guessing
         onWordResolveRequest(handler) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
@@ -246,7 +246,7 @@ module.exports = {
             })
         }
 
-        // Отправка разгаданного слова
+        // Sending a guessed word
         sendWord(word) {
             this.socket.emit('playerRequest', {
                 task: 777,
@@ -254,7 +254,7 @@ module.exports = {
             })
         }
 
-        // Событие успешного разгадывания
+        // Successful guess event
         onWordSuccess(hander) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
@@ -264,7 +264,7 @@ module.exports = {
             })
         }
 
-        // Событие неудачного разгададывания
+        // Unsuccessful guess event
         onWordFail(handler) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
@@ -274,7 +274,7 @@ module.exports = {
             })
         }
 
-        // Событие успешного взлома
+        // Successful hack event
         onHackingSuccess(handler) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
@@ -285,7 +285,7 @@ module.exports = {
             })
         }
 
-        // Событие неудачного взлома
+        // Failed hack event
         onHackingFail(handler) {
             this.socket.on('mainPackage', (tasks) => {
                 tasks.unique.forEach(task => {
